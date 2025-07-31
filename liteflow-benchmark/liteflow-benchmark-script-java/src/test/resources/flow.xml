@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE flow PUBLIC  "liteflow" "liteflow.dtd">
+<flow>
+    <nodes>
+        <node id="s1" name="普通脚本1" type="script" language="java">
+            <![CDATA[
+            import cn.hutool.core.collection.ListUtil;
+            import com.yomahub.liteflow.benchmark.cmp.Person;
+            import com.yomahub.liteflow.benchmark.cmp.TestDomain;
+            import com.yomahub.liteflow.slot.DefaultContext;
+            import com.yomahub.liteflow.spi.holder.ContextAwareHolder;
+            import com.yomahub.liteflow.script.body.JaninoCommonScriptBody;
+            import com.yomahub.liteflow.script.ScriptExecuteWrap;
+
+            import java.util.List;
+
+            public class Demo implements JaninoCommonScriptBody {
+                public Void body(ScriptExecuteWrap wrap) {
+                    int v1 = 2;
+                    int v2 = 3;
+                    DefaultContext ctx = (DefaultContext) wrap.getCmp().getFirstContextBean();
+                    ctx.setData("s1", v1 * v2);
+
+                    TestDomain domain = (TestDomain) ContextAwareHolder.loadContextAware().getBean(TestDomain.class);
+                    String str = domain.sayHello("jack");
+                    ctx.setData("hi", str);
+
+                    List<Person> personList = ListUtil.toList(
+                            new Person("jack", 15000),
+                            new Person("tom", 13500),
+                            new Person("peter", 18600)
+                    );
+
+                    int totalSalary = 0;
+                    for (int i = 0; i < personList.size(); i++) {
+                        Person p = (Person)personList.get(i);
+                        totalSalary += p.getSalary();
+                    }
+
+                    ctx.setData("salary", totalSalary);
+
+                    return null;
+                }
+            }
+            ]]>
+        </node>
+    </nodes>
+
+    <chain name="chain1">
+        THEN(s1);
+    </chain>
+</flow>

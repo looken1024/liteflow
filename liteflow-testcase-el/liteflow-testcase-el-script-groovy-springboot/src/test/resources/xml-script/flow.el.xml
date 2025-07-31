@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow>
+    <nodes>
+        <node id="s1" name="普通脚本1" type="script" language="groovy">
+            <![CDATA[
+            import cn.hutool.core.collection.ListUtil
+            import cn.hutool.core.date.DateUtil
+            import com.yomahub.liteflow.core.NodeSwitchComponent
+            import org.slf4j.Logger
+            import org.slf4j.LoggerFactory
+            import java.util.function.Consumer
+            import java.util.function.Function
+            import java.util.stream.Collectors
+
+            Logger log = LoggerFactory.getLogger(NodeSwitchComponent.class)
+            log.info("hello")
+
+            def date = DateUtil.parse("2022-10-17 13:31:43")
+            println(date)
+            defaultContext.setData("demoDate", date)
+
+            List<String> list = ListUtil.toList("a", "b", "c")
+
+            List<String> resultList = list.stream().map(s -> "hello," + s).collect(Collectors.toList())
+
+            defaultContext.setData("resultList", resultList)
+
+            class Student {
+                int studentID
+                String studentName
+            }
+
+            Student student = new Student()
+            student.studentID = 100301
+            student.studentName = "张三"
+            defaultContext.setData("student", student)
+
+            def a = 3
+            def b = 2
+            defaultContext.setData("s1", a * b)
+            ]]>
+        </node>
+
+        <node id="s2" name="选择脚本" type="switch_script" language="groovy">
+            <![CDATA[
+                count = defaultContext.getData("count")
+                if(count > 100){
+                    return "a"
+                }else{
+                    return "b"
+                }
+            ]]>
+        </node>
+
+        <!-- 定义s3的目的是验证在多个脚本节点同时存在情况下的运行情况是否正确，本身s3不会被引用到 -->
+        <node id="s3" name="普通脚本2" type="script">
+            <![CDATA[
+                def a=30;
+                def b=2;
+                defaultContext.setData("s1",a*b);
+            ]]>
+        </node>
+
+        <node id="s4" name="普通脚本3" type="script">
+            <![CDATA[
+                def a=30;
+                def b=2;
+                defaultContext.setData("s4","s4:" + _meta.requestData);
+            ]]>
+        </node>
+    </nodes>
+
+    <chain name="chain1">
+        THEN(a, b, c, s1);
+    </chain>
+
+    <chain name="chain2">
+        THEN(d, SWITCH(s2).to(a,b));
+    </chain>
+
+    <chain name="chain4">
+        THEN(a, s4);
+    </chain>
+</flow>
